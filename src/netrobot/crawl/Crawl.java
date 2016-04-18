@@ -110,7 +110,7 @@ public abstract class Crawl {
 		while (n > 0) {
 			try {
 				if (HttpStatus.SC_OK != httpClient.executeMethod(method)) {
-					logger.info("can't connect"+url+(maxConnectTimes-n+1));
+					logger.info(" can't connect "+url+(maxConnectTimes-n+1)+" times ");
 					--n;
 				}else {
 					responseHeaders = method.getRequestHeaders();
@@ -129,7 +129,7 @@ public abstract class Crawl {
 					return true;
 				}
 			} catch (Exception e) {
-				logger.error(url+"can't connet"+(maxConnectTimes-n+1));
+				logger.error(url+" can't connect "+(maxConnectTimes-n+1)+" times ");
 				--n;
 			}
 		}

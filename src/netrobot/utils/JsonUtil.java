@@ -38,7 +38,7 @@ public class JsonUtil {
 	 * @param json
 	 * @return
 	 */
-	public JsonNode json2Object(String json){
+	public static JsonNode json2Object(String json){
 		try {
 			return mapper.readTree(json);
 		} catch (Exception e) {
