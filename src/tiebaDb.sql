@@ -1,33 +1,43 @@
 create database tiebadb default charset utf8;
 
-create table `tieba` (
-	`id` int(20) not null AUTO_INCREMENT,
-	`url` varchar(100) not null,
-	`name` varchar(100),
-	`crawl_topic` int(11) default '200',
-	`crawl_reply` int(11) default '50',
-	`frequency` int(11) default '60',
-	`last_crawl` bigint(20),
+create table `setting` (
+	`id` int(11) not null AUTO_INCREMENT,
+	`bar_url` varchar(100) not null,
+	`bar_name` varchar(100),
+	`bar_crawl_topic_page` int(11) default '200',
+	`bar_crawl_reply_page` int(11) default '50',
+	`crawl_frequency` int(11) default '60',
+	`last_crawl_time` varchar(50),
 	`state` enum('1','0'),
 	
 	primary key(`id`),
-	index(`url`)
-)ENGINE=InnoDB default charset utf8;
-
-
-create table `tiebanote` (
-	`id` int(20) not null AUTO_INCREMENT,
-	`tid` varchar(100) not null,
-	`rid` varchar(100) not null,
-	`pid` varchar(100) not null,
-	`title` varchar(100),
-	`context` varchar(6000),
-	`reply_count` int(11) default '0',
-	`last_crawl` bigint(20),
+	index(`bar_url`)
+)ENGINE=InnoDB default charset utf8mb4;
+	
+create table `topicnote` (
+	`id` int(11) not null AUTO_INCREMENT,
+	`note_url` varchar(100) not null,
+	`topic_reply_count` int(11) default '0',
+	`note_title` varchar(100) not null,
+	`last_reply_time` varchar(50),
 	`state` enum('1','0'),
 	
 	primary key(`id`),
-	index(`tid`),
-	index(`rid`),
-	index(`pid`)
-)ENGINE=InnoDB default charset utf8;
+	index(`note_url`)
+)ENGINE=InnoDB default charset utf8mb4;
+	
+create table `notedetail` (
+	`id` int(11) not null AUTO_INCREMENT,
+	`note_url` varchar(100) not null,
+	`reply_floor_id` varchar(100) not null,
+	`reply_parent_id` varchar(100) not null,
+	`reply_context` varchar(6000),
+	`lzl_reply_count` int(11) default '0',
+	`reply_time` bigint(20),
+	`state` enum('1','0'),
+	
+	primary key(`id`),
+	index(`note_url`),
+	index(`reply_floor_id`),
+	index(`reply_parent_id`)
+)ENGINE=InnoDB default charset utf8mb4;

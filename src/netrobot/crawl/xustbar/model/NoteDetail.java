@@ -8,64 +8,55 @@ package netrobot.crawl.xustbar.model;
  */
 public class NoteDetail {
 
-	//主题帖id == 1楼id
-	private String tid;  //不允许重复
+	//主题帖url
+	private String note_url;  //不允许重复
 	//回复楼id
-	private String rid;  //不允许重复
-	//父id,(0,null为主题贴) 
-	private String pid;  //非空
-	//主题帖标题
-	private String title;
-	//主题(楼中)内容
-	private String context;
-	//主题(楼中)回复数
-	private int reply_count;
-	//最后更新时间
-	private String last_crawl;
+	private String reply_floor_id;  //不允许重复
+	//父id(令，一级回复id=0)
+	private String reply_parent_id;  //非空
+	//一级回复(或楼中楼)内容
+	private String reply_context;
+	//一级回复(或楼中楼)回复数
+	private int lzl_reply_count;
+	//最后回复时间
+	private String reply_time;
 	
 	
-	public String getTid() {
-		return tid;
+	public String getNote_url() {
+		return note_url;
 	}
-	public void setTid(String tid) {
-		this.tid = tid;
+	public void setNote_url(String note_url) {
+		this.note_url = note_url;
 	}
-	public String getRid() {
-		return rid;
+	public String getReply_floor_id() {
+		return reply_floor_id;
 	}
-	public void setRid(String rid) {
-		this.rid = rid;
+	public void setReply_floor_id(String reply_floor_id) {
+		this.reply_floor_id = reply_floor_id;
 	}
-	public String getPid() {
-		return pid;
+	public String getReply_parent_id() {
+		return reply_parent_id;
 	}
-	public void setPid(String pid) {
-		this.pid = pid;
+	public void setReply_parent_id(String reply_parent_id) {
+		this.reply_parent_id = reply_parent_id;
 	}
-	public String getTitle() {
-		return title;
+	public String getReply_context() {
+		return reply_context;
 	}
-	public void setTitle(String title) {
-		this.title = title;
+	public void setReply_context(String reply_context) {
+		this.reply_context = reply_context;
 	}
-	public String getContext() {
-		return context;
+	public int getLzl_reply_count() {
+		return lzl_reply_count;
 	}
-	public void setContext(String context) {
-		this.context = context;
+	public void setLzl_reply_count(int lzl_reply_count) {
+		this.lzl_reply_count = lzl_reply_count;
 	}
-	public int getReply_count() {
-		return reply_count;
+	public String getReply_time() {
+		return reply_time;
 	}
-	public void setReply_count(int reply_count) {
-		this.reply_count = reply_count;
+	public void setReply_time(String reply_time) {
+		this.reply_time = reply_time;
 	}
-	public String getLast_crawl() {
-		return last_crawl;
-	}
-	public void setLast_crawl(String last_crawl) {
-		this.last_crawl = last_crawl;
-	}
-	
 	
 }

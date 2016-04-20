@@ -15,11 +15,19 @@ public class CrawlNoteDetail extends Crawl{
 	private String url;
 	
 	//标题
-	private static final String TITLE = "style=\"width: 470px\">(.*?)</h1><ul class=";
-
-	//一级回复
-	private static final String REPLY_ONE = "class=\"d_post_content j_d_post_content  clearfix\">            (.*?)</div>";
-
+	private static final String NOTE_TITLE = "style=\"width: 470px\">(.*?)</h1><ul class=";
+	//一级回复ID
+	private static final String REPLY_TOPIC_ID = "<div id=\"post_content_(\\d*?)\"";
+	//一级回复内容
+	private static final String REPLY_TOPIC_CONTEXT = "class=\"d_post_content j_d_post_content  clearfix\">            (.*?)</div>";
+	//一级回复时间
+	private static final String REPLY_TOPIC_TIME = "(\\d+-\\d+-\\d+) (\\d+:\\d+)";
+	//楼中楼回复ID及父ID
+	
+	
+	private static final String REPLY_LZL_PID_SPID = "\'pid\':\'(\\d+)\',\'spid\':\'(\\d+)\'";
+	//'pid':'87824397167','spid':'87824719953',
+	
 	private static HashMap<String, String> params;
 
 	static{
@@ -35,36 +43,51 @@ public class CrawlNoteDetail extends Crawl{
 	}
 	
 	private String getNoteTitle(){
-		return RegexUtil.getFirstString(getPageSourceCode(), TITLE, 1);
+		return RegexUtil.getFirstString(getPageSourceCode(), NOTE_TITLE, 1);
 	}
 	
-	private List<String> getNoteReplyOne(){
-		return RegexUtil.getList(getPageSourceCode(), REPLY_ONE, 1);
+	private List<String> getNoteReplyTopicID(){
+		return RegexUtil.getList(getPageSourceCode(), REPLY_TOPIC_ID, 1);
 	}
 	
-	private List<String> getNoteReplyOne(boolean exceptLabel){
-		List<String> replyOneList = getNoteReplyOne();
+	private List<String> getNoteReplyTopicContext(){
+		return RegexUtil.getList(getPageSourceCode(), REPLY_TOPIC_CONTEXT, 1);
+	}
+	
+	private List<String> getNoteReplyTopicTime(){
+		return RegexUtil.getList(getPageSourceCode(), REPLY_TOPIC_TIME, 2);
+	}
+	
+	private List<String> getNoteReplyLzlPID(){
+		return RegexUtil.getList(getPageSourceCode(), REPLY_LZL_PID_SPID, 1);
+	}
+	
+	private List<String> getNoteReplyLzlSPID(){
+		return RegexUtil.getList(getPageSourceCode(), REPLY_LZL_PID_SPID, 2);
+	}
+	
+	private List<String> getNoteReplyTopicContext(boolean exceptLabel){
+		List<String> replyTopicList = getNoteReplyTopicContext();
 		if (exceptLabel) {
-			List<String> exceptReplyOne = new ArrayList<String>();
-			for (String one : replyOneList) {
+			List<String> exceptReplyTopic = new ArrayList<String>();
+			for (String reply : replyTopicList) {
 				//正则去掉所有网页html标签
-				exceptReplyOne.add(one.replaceAll("<[^>]*>", ""));
+				exceptReplyTopic.add(reply.replaceAll("<[^>]*>", ""));
 			}
-			return exceptReplyOne;
+			return exceptReplyTopic;
 		}
-		return replyOneList;
+		return replyTopicList;
 	}
 	
 	public static void main(String[] args) {
 
 		//XUST某一帖子url
 		CrawlNoteDetail noteDetail = new CrawlNoteDetail("http://tieba.baidu.com/p/4484854674");
-		String title = noteDetail.getNoteTitle();
-		List<String> oneList = noteDetail.getNoteReplyOne(true);
-		System.out.println("标题  "+title);
+
+		List<String> pid = noteDetail.getNoteReplyLzlPID();
 		
-		for (int i = 0; i < oneList.size(); i++) {
-			System.out.println((i+1)+"楼 "+" "+oneList.get(i));
+		for (int i = 0; i < pid.size(); i++) {
+			System.out.println(i + " "+pid.get(i));
 		}
 
 	}

@@ -7,55 +7,52 @@ package netrobot.crawl.xustbar.model;
  */
 public class Setting {
 	//某吧首页url
-	private String url;  //主键
+	private String bar_url;  //主键
 	//名称
-	private String name;
+	private String bar_name;
 	//抓取主题帖数
-	private int crawl_topic;
+	private int bar_crawl_topic_page;
 	//抓取帖子回复数
-	private int crawl_reply;
+	private int bar_crawl_reply_page;
 	//爬取频率
-	private int frequency;
+	private int crawl_frequency;
 	//最后一次爬取时间
-	private String last_crawl;
+	private String last_crawl_time;
 	
-	
-	public String getUrl() {
-		return url;
+	public String getBar_url() {
+		return bar_url;
 	}
-	public void setUrl(String url) {
-		this.url = url;
+	public void setBar_url(String bar_url) {
+		this.bar_url = bar_url;
 	}
-	public String getName() {
-		return name;
+	public String getBar_name() {
+		return bar_name;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setBar_name(String bar_name) {
+		this.bar_name = bar_name;
 	}
-	public int getCrawl_topic() {
-		return crawl_topic;
+	public int getBar_crawl_topic_page() {
+		return bar_crawl_topic_page;
 	}
-	public void setCrawl_topic(int crawl_topic) {
-		this.crawl_topic = crawl_topic;
+	public void setBar_crawl_topic_page(int bar_crawl_topic_page) {
+		this.bar_crawl_topic_page = bar_crawl_topic_page;
 	}
-	public int getCrawl_reply() {
-		return crawl_reply;
+	public int getBar_crawl_reply_page() {
+		return bar_crawl_reply_page;
 	}
-	public void setCrawl_reply(int crawl_reply) {
-		this.crawl_reply = crawl_reply;
+	public void setBar_crawl_reply_page(int bar_crawl_reply_page) {
+		this.bar_crawl_reply_page = bar_crawl_reply_page;
 	}
-	public int getFrequency() {
-		return frequency;
+	public int getCrawl_frequency() {
+		return crawl_frequency;
 	}
-	public void setFrequency(int frequency) {
-		this.frequency = frequency;
+	public void setCrawl_frequency(int crawl_frequency) {
+		this.crawl_frequency = crawl_frequency;
 	}
-	public String getLast_crawl() {
-		return last_crawl;
+	public String getLast_crawl_time() {
+		return last_crawl_time;
 	}
-	public void setLast_crawl(String last_crawl) {
-		this.last_crawl = last_crawl;
+	public void setLast_crawl_time(String last_crawl_time) {
+		this.last_crawl_time = last_crawl_time;
 	}
-	
-	
 }

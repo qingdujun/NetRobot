@@ -12,6 +12,7 @@ public class ParseMD5 extends Encrypt{
 	 * @param str
 	 * @return
 	 */
+
 	public static String parseStr2MD5(String str) {
 		return encryt(str, MD5);
 	}
