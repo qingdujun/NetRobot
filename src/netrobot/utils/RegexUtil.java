@@ -16,6 +16,7 @@ public class RegexUtil {
 	private static String rootUrlRegex = "(http://.*?/)";
 	private static String currentUrlRegex = "(http://.*/)";
 	private static String ChRegex = "([\u4e00-\u9fa5]+)";
+	private static String EMOJI = "[\\ud800\\udc00-\\udbff\\udfff\\ud800-\\udfff]";
 	
 
 	public static String getString(String dealStr, String regexStr, String splitStr, int n){
@@ -203,4 +204,16 @@ public class RegexUtil {
 			url = url.replaceAll(s, URLEncoder.encode(s, "utf-8"));
 		}
 	}
+	
+	/**
+	 * 正则过滤所有emoji
+	 * @param source
+	 * @return
+	 */
+	public static String filterEmoji(String source) {  
+        if(null != source){  
+            return source.replaceAll(EMOJI, "");  
+        } 
+        return source;  
+    }  
 }

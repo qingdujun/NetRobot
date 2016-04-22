@@ -12,7 +12,7 @@ create table `setting` (
 	
 	primary key(`id`),
 	index(`bar_url`)
-)ENGINE=InnoDB default charset utf8mb4;
+)ENGINE=InnoDB default charset utf8;
 	
 create table `topicnote` (
 	`id` int(11) not null AUTO_INCREMENT,
@@ -24,7 +24,7 @@ create table `topicnote` (
 	
 	primary key(`id`),
 	index(`note_url`)
-)ENGINE=InnoDB default charset utf8mb4;
+)ENGINE=InnoDB default charset utf8;
 	
 create table `notedetail` (
 	`id` int(11) not null AUTO_INCREMENT,
@@ -40,4 +40,4 @@ create table `notedetail` (
 	index(`note_url`),
 	index(`reply_floor_id`),
 	index(`reply_parent_id`)
-)ENGINE=InnoDB default charset utf8mb4;
+)ENGINE=InnoDB default charset utf8;

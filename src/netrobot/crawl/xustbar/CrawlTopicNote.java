@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-
 import netrobot.crawl.Crawl;
 import netrobot.crawl.xustbar.db.XUSTbarDb;
 import netrobot.crawl.xustbar.model.TopicNote;
@@ -20,15 +19,17 @@ public class CrawlTopicNote extends Crawl{
 
 	private String bar_url;
 	private static HashMap<String, String> params;
-	//主题帖子url
-	private static final String NOTE_URL = "<div class=\"threadlist_text threadlist_title j_th_tit  \">            <a href=\"(.*?)\"";
-	//主题回复数目
-	private static final String TOPIC_REPLY_COUNT = "<div class=\"threadlist_rep_num\"  title=\"回复\">(\\d+)</div>";
-	//帖子标题
-	private static final String NOTE_TITLE = "target=\"_blank\" class=\"j_th_tit\">(.*?)</a>";
-	//最后回复时间
-	private static final String LAST_REPLY_TIME = "<span class=\"threadlist_reply_date j_reply_data\" title=\"最后回复时间\">            (.*?)</span>";
-
+	/**
+	 * 1 replycount
+	 * 2 -
+	 * 3 url
+	 * 4 title
+	 */
+	private static final String NOTE_RSUT = "title=\"回复\">(\\d+)</div>(.*?)<a href=\"(.*?)\" title=\"(.*?)\"";
+	//置顶帖子数
+	private static final String TOP_NOTE_COUNT = "(alt=\"置顶\")";
+	private static final String  LAST_REPLY_TIME = "title=\"最后回复时间\">            (.*?)</span>";
+	
 	private List<String> note_urls;
 	private List<String> topic_reply_counts;
 	private List<String> note_titles;
@@ -49,26 +50,27 @@ public class CrawlTopicNote extends Crawl{
 		readPageByGet(bar_url, params, "UTF-8");
 		this.bar_url = bar_url;
 	}
+
 	/**
 	 * 获取页面所有主题帖url
 	 * @return
 	 */
-	private List<String> getPageNoteUrl(){
-		return RegexUtil.getArrayList(getPageSourceCode(), NOTE_URL, bar_url, 1);
+	private List<String> getNoteUrl(){
+		return RegexUtil.getArrayList(getPageSourceCode(), NOTE_RSUT, bar_url, 3);
 	}
 	/**
 	 * 获取主题帖回复数
 	 * @return
 	 */
 	private List<String> getTopicReplyCount(){
-		return RegexUtil.getList(getPageSourceCode(), TOPIC_REPLY_COUNT, 1);
+		return RegexUtil.getList(getPageSourceCode(), NOTE_RSUT, 1);
 	}
 	/**
 	 * 获取帖子标题
 	 * @return
 	 */
 	private List<String> getNoteTitle(){
-		return RegexUtil.getList(getPageSourceCode(), NOTE_TITLE, 1);
+		return RegexUtil.getList(getPageSourceCode(), NOTE_RSUT, 4);
 	}
 
 	/**
@@ -76,7 +78,35 @@ public class CrawlTopicNote extends Crawl{
 	 * @return
 	 */
 	private List<String> getLastReplyTime(){
-		return RegexUtil.getList(getPageSourceCode(), LAST_REPLY_TIME, 1);
+		//构造缺省时间
+		List<String> tmpReplyTime = RegexUtil.getList(getPageSourceCode(), LAST_REPLY_TIME, 1);
+		for (int i = 0; i < getTopNoteCount(); i++) {
+			tmpReplyTime.add(0, "0");
+		}
+		return tmpReplyTime;
+	}
+	/**
+	 * 获取置顶帖子数，无时间,需手动插入
+	 * @return
+	 */
+	private int getTopNoteCount() {
+		return RegexUtil.getList(getPageSourceCode(), TOP_NOTE_COUNT, 1).size();
+	}
+	/**
+	 * 过滤标题中emoji表情
+	 * @param emoji
+	 * @return
+	 */
+	private List<String> getNoteTitle(boolean emoji) {
+		List<String> noteTitles = getNoteTitle();
+		if (emoji) {
+			List<String> filterEmoji = new ArrayList<String>();
+			for (String noteTitle : noteTitles) {
+				filterEmoji.add(RegexUtil.filterEmoji(noteTitle));
+			}
+			return filterEmoji;
+		}
+		return noteTitles;
 	}
 
 	/**
@@ -84,8 +114,8 @@ public class CrawlTopicNote extends Crawl{
 	 * @param exceptOther
 	 * @return
 	 */
-	private List<String> getPageNoteUrl(boolean exceptOther) {
-		List<String> urls = getPageNoteUrl();
+	private List<String> getNoteUrl(boolean exceptOther) {
+		List<String> urls = getNoteUrl();
 		if (exceptOther) {
 			List<String> exceptUrls = new ArrayList<String>();
 			for (String url : urls) {
@@ -141,16 +171,16 @@ public class CrawlTopicNote extends Crawl{
 		}
 		return lastReplyTimes;
 	}
-
+	
 	/**
 	 * 获取主题帖的容量
 	 * @return
 	 */
 	private int getTopicNoteMinSize() {
 	
-		note_urls = getPageNoteUrl(true);
+		note_urls = getNoteUrl(true);
 		topic_reply_counts = getTopicReplyCount();
-		note_titles = getNoteTitle();
+		note_titles = getNoteTitle(true);
 		last_reply_times = getLastReplyTime(true);
 		
 		int min = note_urls.size();
@@ -167,6 +197,7 @@ public class CrawlTopicNote extends Crawl{
 		}
 		return min;
 	}
+	
 	/**
 	 * 组装主题帖子所有内容
 	 * @return
@@ -192,18 +223,15 @@ public class CrawlTopicNote extends Crawl{
 		//此链接为XUST首页链接
 		CrawlTopicNote ctn = new CrawlTopicNote("http://tieba.baidu.com/f?ie=utf-8&kw=%E8%A5%BF%E5%AE%89%E7%A7%91%E6%8A%80%E5%A4%A7%E5%AD%A6");
 
-//		//此链接为XUST首页链接
-//		CrawlTopicNote updateUrlTime2 = new CrawlTopicNote("http://tieba.baidu.com/f?kw=%E8%A5%BF%E5%AE%89%E7%A7%91%E6%8A%80%E5%A4%A7%E5%AD%A6&ie=utf-8&tp=0&pn=450");
-//
-//		List<String> count = updateUrlTime2.getLastReplyTime(true);
-//
-//
-//		for (int i = 0; i < count.size(); i++) {
-//			System.out.println((i+1)+" "+count.get(i));
-//		}
+//		List<String> cn = ctn.getTopicReplyCount();
+//		List<String> url= ctn.getNoteUrl(true);
+//		List<String> tl= ctn.getNoteTitle();
+//		List<String> tm= ctn.getLastReplyTime(true);
 //		
+//		for (int i = 0; i < url.size(); i++) {
+//			System.out.println((i+1)+" "+cn.get(i)+" "+url.get(i)+" "+tl.get(i)+" "+tm.get(i));
+//		}
 		
-
 		XUSTbarDb db = new XUSTbarDb();
 		db.saveTopicNoteCrawlInfo(ctn.getTopicNotes(), false);
 
