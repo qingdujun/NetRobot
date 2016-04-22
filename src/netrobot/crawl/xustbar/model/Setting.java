@@ -11,9 +11,7 @@ public class Setting {
 	//名称
 	private String bar_name;
 	//抓取主题帖数
-	private int bar_crawl_topic_page;
-	//抓取帖子回复数
-	private int bar_crawl_reply_page;
+	private int bar_crawl_note_count;
 	//爬取频率
 	private int crawl_frequency;
 	//最后一次爬取时间
@@ -31,17 +29,11 @@ public class Setting {
 	public void setBar_name(String bar_name) {
 		this.bar_name = bar_name;
 	}
-	public int getBar_crawl_topic_page() {
-		return bar_crawl_topic_page;
+	public int getBar_crawl_note_count() {
+		return bar_crawl_note_count;
 	}
-	public void setBar_crawl_topic_page(int bar_crawl_topic_page) {
-		this.bar_crawl_topic_page = bar_crawl_topic_page;
-	}
-	public int getBar_crawl_reply_page() {
-		return bar_crawl_reply_page;
-	}
-	public void setBar_crawl_reply_page(int bar_crawl_reply_page) {
-		this.bar_crawl_reply_page = bar_crawl_reply_page;
+	public void setBar_crawl_note_count(int bar_crawl_note_count) {
+		this.bar_crawl_note_count = bar_crawl_note_count;
 	}
 	public int getCrawl_frequency() {
 		return crawl_frequency;

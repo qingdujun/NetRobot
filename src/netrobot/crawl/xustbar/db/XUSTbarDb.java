@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import netrobot.crawl.xustbar.model.Setting;
 import netrobot.crawl.xustbar.model.TopicNote;
 import netrobot.db.manager.DbServer;
 import netrobot.utils.JsonUtil;
@@ -19,8 +20,149 @@ public class XUSTbarDb {
 
 	private static final String POOL_NAME = "proxool.tiebadb";
 	
+	
 	/**
-	 * 从数据库中获取抓取清单
+	 * 从数据库中获取Setting表
+	 * @return
+	 */
+	public List<Setting> getSettingTableInfo(){
+		List<Setting> settings = new ArrayList<Setting>();
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			String sql = "select * from setting";
+			ResultSet rs = dbServer.select(sql);
+			while (rs.next()) {
+				Setting setting = new Setting();
+				setting.setBar_url(rs.getString("bar_url"));
+				setting.setBar_name(rs.getString("bar_name"));
+				setting.setBar_crawl_note_count(rs.getInt("bar_crawl_note_count"));
+				setting.setCrawl_frequency(rs.getInt("crawl_frequency"));
+				setting.setLast_crawl_time(rs.getString("last_crawl_time"));
+				settings.add(setting);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+		return settings;
+	}
+	
+	/**
+	 * 保存Setting信息
+	 * @param setting
+	 * @param isMD5
+	 */
+	public void saveSettingCrawlInfo(Setting setting,boolean isMD5) {
+		if (null == setting) {
+			return;
+		}
+
+		String bar_url = ParseMD5.parseStr2MD5(setting.getBar_url());
+		if (hasExistBarUrl(bar_url) || hasExistBarUrl(setting.getBar_url())) {
+			updateSettingInfo(setting, isMD5);
+		}else {
+			insertSettingInfo(setting,isMD5);
+		}
+	}
+	/**
+	 * 对Setting表进行插入操作
+	 * @param setting
+	 * @param isMD5
+	 */
+	private void insertSettingInfo(Setting setting,boolean isMD5) {
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			HashMap<Integer, Object> params = new HashMap<Integer, Object>();
+			int i = 1;
+			if (isMD5) {
+				//MD5加密
+				params.put(i++, ParseMD5.parseStr2MD5(setting.getBar_url()));
+				params.put(i++, ParseMD5.parseStr2MD5(setting.getBar_name()));
+				params.put(i++, setting.getBar_crawl_note_count());
+				params.put(i++, setting.getCrawl_frequency());
+				params.put(i++, setting.getLast_crawl_time());
+				params.put(i, 1);
+			}else {
+				params.put(i++, setting.getBar_url());
+				params.put(i++, setting.getBar_name());
+				params.put(i++, setting.getBar_crawl_note_count());
+				params.put(i++, setting.getCrawl_frequency());
+				params.put(i++, setting.getLast_crawl_time());
+				params.put(i, 1);
+			}
+			
+			dbServer.insert("setting","bar_url,bar_name,bar_crawl_note_count,crawl_frequency,last_crawl_time,state",params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+	}
+	
+	/**
+	 * 更新贴吧采集主题帖子数目
+	 * @param topicNote
+	 * @param isMD5
+	 */
+	private void updateSettingInfo(Setting setting, boolean isMD5){
+		if (null == setting) {
+			return;
+		}
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			HashMap<Integer, Object> params = new HashMap<Integer,Object>();
+			int i = 1;
+
+			if (isMD5) {
+				//MD5加密
+				params.put(i++, ParseMD5.parseStr2MD5(setting.getBar_name()));
+				params.put(i++, setting.getBar_crawl_note_count());
+				params.put(i++, setting.getCrawl_frequency());
+				params.put(i++, setting.getLast_crawl_time());
+				params.put(i, 1);
+			}else {
+				params.put(i++, setting.getBar_name());
+				params.put(i++, setting.getBar_crawl_note_count());
+				params.put(i++, setting.getCrawl_frequency());
+				params.put(i++, setting.getLast_crawl_time());
+				params.put(i, 1);
+			}
+			String columns = "bar_name,bar_crawl_note_count,crawl_frequency,last_crawl_time,state";
+			String condition = "where bar_url = '"+setting.getBar_url()+"'";
+			dbServer.update("setting", columns, condition, params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+	}
+	
+	/**
+	 * 判断Bar_Url是否存在
+	 * @param note_url
+	 * @return
+	 */
+	private boolean hasExistBarUrl(String bar_url) {
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			String sql = "select sum(1) as count from setting where bar_url = '"+bar_url+"'";
+			ResultSet rs = dbServer.select(sql);
+			if (rs.next()) {
+				int count = rs.getInt("count");
+				return count > 0;
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+		return true;
+	}
+	
+	/**
+	 * 从数据库中获取crawlTopicNote清单
 	 * @return
 	 */
 	public List<TopicNote> getTopicNoteCrawlList(){
@@ -56,8 +198,9 @@ public class XUSTbarDb {
 		for (TopicNote topicNote : topicNotes) {
 			//MD5加密
 			String note_url = ParseMD5.parseStr2MD5(topicNote.getNote_url());
-			if (hasExistUrl(note_url)) {
-				updateStateValue(note_url, 1);
+			if (hasExistNoteUrl(note_url) || hasExistNoteUrl(topicNote.getNote_url())) {
+//				updateStateValue(note_url, 1);
+				updateTopicNoteCount(topicNote, isMD5);
 			}else {
 				insertTopicNoteCrawlInfo(topicNote,isMD5);
 			}
@@ -78,7 +221,7 @@ public class XUSTbarDb {
 	 * @param note_url
 	 * @param state
 	 */
-	public void updateStateValue(String note_url, int state) {
+	private void updateStateValue(String note_url, int state) {
 		DbServer dbServer = new DbServer(POOL_NAME);
 		try {
 			String sql = "update topicnote set `state` = '"+state+"' where note_url = '"+note_url+"'";
@@ -94,7 +237,7 @@ public class XUSTbarDb {
 	 * @param note_url
 	 * @return
 	 */
-	private boolean hasExistUrl(String note_url) {
+	private boolean hasExistNoteUrl(String note_url) {
 		DbServer dbServer = new DbServer(POOL_NAME);
 		try {
 			String sql = "select sum(1) as count from topicnote where note_url = '"+note_url+"'";
@@ -113,7 +256,7 @@ public class XUSTbarDb {
 	}
 	
 	/**
-	 * 执行数据库插入操作
+	 * 执行主题帖插入操作
 	 * @param topicNote
 	 * @param isMD5
 	 */
@@ -144,10 +287,73 @@ public class XUSTbarDb {
 			dbServer.close();
 		}
 	}
+	/**
+	 * 更新主题帖子时间
+	 * @param topicNote
+	 * @param isMD5
+	 */
+	private void updateTopicNoteTime(TopicNote topicNote, boolean isMD5){
+		if (null == topicNote) {
+			return;
+		}
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			HashMap<Integer, Object> params = new HashMap<Integer,Object>();
+			int i = 1;
+			if (isMD5) {
+				//MD5加密
+				params.put(i++, topicNote.getLast_reply_time());
+				params.put(i++, 0);
+			}else {
+				params.put(i++, topicNote.getLast_reply_time());
+				params.put(i++, 0);
+			}
+			String columns = "reply_time,state";
+			String condition = "where note_url = '"+topicNote.getNote_url()+"'";
+			dbServer.update("topicnote", columns, condition, params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+	}
 	
+	/**
+	 * 更新主题帖子数目
+	 * @param topicNote
+	 * @param isMD5
+	 */
+	private void updateTopicNoteCount(TopicNote topicNote, boolean isMD5){
+		if (null == topicNote) {
+			return;
+		}
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			HashMap<Integer, Object> params = new HashMap<Integer,Object>();
+			int i = 1;
+			if (isMD5) {
+				//MD5加密
+				params.put(i++, topicNote.getTopic_reply_count());
+			}else {
+				params.put(i++, topicNote.getTopic_reply_count());
+			}
+			String columns = "topic_reply_count";
+			String condition = "where note_url = '"+topicNote.getNote_url()+"'";
+			dbServer.update("topicnote", columns, condition, params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+	}
 	
 	public static void main(String[] args) {
+		
+		
 		XUSTbarDb db = new XUSTbarDb();
 		System.out.println(JsonUtil.parseJson(db.getTopicNoteCrawlList()));
+		
+		
+		
 	}
 }
