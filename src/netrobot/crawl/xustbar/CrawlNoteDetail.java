@@ -7,13 +7,26 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import netrobot.crawl.Crawl;
+import netrobot.crawl.xustbar.db.XUSTbarDb;
+import netrobot.crawl.xustbar.model.NoteDetail;
+import netrobot.crawl.xustbar.model.TopicNote;
 import netrobot.utils.JsonUtil;
 import netrobot.utils.RegexUtil;
 
-public class CrawlNoteDetail extends Crawl{
+public class CrawlNoteDetail extends Crawl{	
+	//主题帖url
+	private String note_url;  //不允许重复
+	//回复楼id
+	private List<String> reply_floor_ids;  //不允许重复
+	//父id(令，一级回复id=0)
+	private List<String> reply_parent_ids;  //非空
+	//一级回复(或楼中楼)内容
+	private List<String> reply_contexts;
+	//一级回复(或楼中楼)回复数
+//	private int lzl_reply_count;
+	//最后回复时间
+	private List<String> reply_times;
 
-	private String note_url;
-	
 	//一级回复ID
 	private static final String ONE_REPLY_ID = "<div id=\"post_content_(\\d*?)\"";
 	//一级回复内容
@@ -74,16 +87,61 @@ public class CrawlNoteDetail extends Crawl{
 		return oneReplycList;
 	}
 	
+	/**
+	 * 获取帖子详情的容量
+	 * @return
+	 */
+	private int getNoteDetailMinSize() {
+		
+		reply_floor_ids = getOneReplyID();
+		reply_contexts = getOneReplyContext(true);
+		reply_times = getOneReplyTime();
+		
+		int min = reply_floor_ids.size();
+		if (min > reply_contexts.size()) {
+			min = reply_contexts.size();
+		}
+		
+		if (min > reply_times.size()) {
+			min = reply_times.size();
+		}
+		return min;
+	}
+	
+	/**
+	 * 组装帖子详细内容
+	 * @return
+	 */
+	public List<NoteDetail> getNoteDetails() {
+		List<NoteDetail> noteDetails = new ArrayList<NoteDetail>();
+
+		int minSize = getNoteDetailMinSize();
+		for (int i = 0; i < minSize; i++) {
+			NoteDetail noteDetail = new NoteDetail();
+			
+			noteDetail.setNote_url(note_url);
+			noteDetail.setReply_floor_id(reply_floor_ids.get(i));
+			noteDetail.setReply_context(reply_contexts.get(i));
+			noteDetail.setReply_parent_id("0");
+			noteDetail.setReply_time(reply_times.get(i));
+			noteDetails.add(noteDetail);
+		}
+
+		return noteDetails;
+	}
+	
 	public static void main(String[] args) {
 
 		//XUST某一帖子url
-		CrawlNoteDetail noteDetail = new CrawlNoteDetail("http://tieba.baidu.com/p/4496267469");
+		CrawlNoteDetail cnd = new CrawlNoteDetail("http://tieba.baidu.com/p/4496267469");
 
-		List<String> pid = noteDetail.getOneReplyTime();
+//		List<String> pid = noteDetail.getOneReplyTime();
+//		
+//		for (int i = 0; i < pid.size(); i++) {
+//			System.out.println(i + " "+pid.get(i));
+//		}
 		
-		for (int i = 0; i < pid.size(); i++) {
-			System.out.println(i + " "+pid.get(i));
-		}
-
+		XUSTbarDb db = new XUSTbarDb();
+		db.saveNoteDetailInfo(cnd.getNoteDetails(), false);
 	}
 }

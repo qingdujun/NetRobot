@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import netrobot.crawl.xustbar.model.NoteDetail;
 import netrobot.crawl.xustbar.model.Setting;
 import netrobot.crawl.xustbar.model.TopicNote;
 import netrobot.db.manager.DbServer;
@@ -347,13 +348,65 @@ public class XUSTbarDb {
 		}
 	}
 	
+	/**
+	 * 保存帖子详情
+	 * @param noteDetails
+	 * @param isMD5
+	 */
+	public void saveNoteDetailInfo(List<NoteDetail> noteDetails,boolean isMD5) {
+		if (null == noteDetails) {
+			return;
+		}
+		for (NoteDetail noteDetail : noteDetails) {
+			//MD5加密
+			String reply_floor_id = ParseMD5.parseStr2MD5(noteDetail.getReply_floor_id());
+			if (hasExistNoteUrl(reply_floor_id) || hasExistNoteUrl(noteDetail.getReply_floor_id())) {
+//				updateStateValue(note_url, 1);
+				continue;
+			}else {
+				insertNoteDetailInfo(noteDetail,isMD5);
+			}
+		}
+	}
+	
+	/**
+	 * 执行帖子详情插入操作
+	 * @param noteDetail
+	 * @param isMD5
+	 */
+	private void insertNoteDetailInfo(NoteDetail noteDetail, boolean isMD5) {
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			HashMap<Integer, Object> params = new HashMap<Integer, Object>();
+			int i = 1;
+			if (isMD5) {
+				//MD5加密
+				params.put(i++, ParseMD5.parseStr2MD5(noteDetail.getNote_url()));
+				params.put(i++, ParseMD5.parseStr2MD5(noteDetail.getReply_floor_id()));
+				params.put(i++, ParseMD5.parseStr2MD5("0"));
+				params.put(i++, ParseMD5.parseStr2MD5(noteDetail.getReply_context()));
+				params.put(i, 1);
+			}else {
+				params.put(i++, noteDetail.getNote_url());
+				params.put(i++, noteDetail.getReply_floor_id());
+				params.put(i++, "0");
+				params.put(i++, noteDetail.getReply_context());
+				params.put(i, 1);
+			}
+			
+			dbServer.insert("notedetail","note_url,reply_floor_id,reply_parent_id,reply_context,state",params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+	}
+	
 	public static void main(String[] args) {
 		
 		
 		XUSTbarDb db = new XUSTbarDb();
 		System.out.println(JsonUtil.parseJson(db.getTopicNoteCrawlList()));
-		
-		
-		
+
 	}
 }

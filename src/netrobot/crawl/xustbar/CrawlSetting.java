@@ -1,12 +1,9 @@
 package netrobot.crawl.xustbar;
 
 import java.util.HashMap;
-import java.util.List;
-
 import netrobot.crawl.Crawl;
 import netrobot.crawl.xustbar.db.XUSTbarDb;
 import netrobot.crawl.xustbar.model.Setting;
-import netrobot.utils.JsonUtil;
 import netrobot.utils.RegexUtil;
 
 public class CrawlSetting extends Crawl{
@@ -14,7 +11,6 @@ public class CrawlSetting extends Crawl{
 	private static HashMap<String, String> params;
 	private String bar_url;
 	private String bar_name;
-	private String bar_crawl_floor_count;
 	private int crawl_frequency;
 	
 	

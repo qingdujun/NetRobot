@@ -29,6 +29,8 @@ public class CrawlTopicNote extends Crawl{
 	//置顶帖子数
 	private static final String TOP_NOTE_COUNT = "(alt=\"置顶\")";
 	private static final String  LAST_REPLY_TIME = "title=\"最后回复时间\">            (.*?)</span>";
+	//主题帖页数
+	private static final String TOTAL_PAGE = "回复贴，共<span class=\"red\">(\\d+)</span>页</li>";
 	
 	private List<String> note_urls;
 	private List<String> topic_reply_counts;
