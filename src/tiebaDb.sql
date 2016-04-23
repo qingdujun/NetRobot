@@ -15,7 +15,7 @@ create table `setting` (
 	
 create table `topicnote` (
 	`id` int(11) not null AUTO_INCREMENT,
-	`note_url` varchar(100) not null unique,
+	`note_url` varchar(100) not null,
 	`topic_reply_count` int(11) default '0',
 	`note_title` varchar(100) not null,
 	`last_reply_time` varchar(50),
@@ -28,7 +28,22 @@ create table `topicnote` (
 create table `notedetail` (
 	`id` int(11) not null AUTO_INCREMENT,
 	`note_url` varchar(100) not null,
-	`reply_floor_id` varchar(100) not null unique,
+	`reply_floor_id` varchar(100) not null,
+	`reply_parent_id` varchar(100) not null,
+	`reply_context` varchar(6000),
+	`lzl_reply_count` int(11) default '-1',
+	`state` enum('1','0'),
+	
+	primary key(`id`),
+	index(`note_url`),
+	index(`reply_floor_id`),
+	index(`reply_parent_id`)
+)ENGINE=InnoDB default charset utf8;
+
+create table `buf` (
+	`id` int(11) not null AUTO_INCREMENT,
+	`topicpage` int(11) default '0',
+	`notepage` int(11) default '0',
 	`reply_parent_id` varchar(100) not null,
 	`reply_context` varchar(6000),
 	`lzl_reply_count` int(11) default '-1',

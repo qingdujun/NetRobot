@@ -18,10 +18,18 @@ import netrobot.utils.ParseMD5;
  *
  */
 public class XUSTbarDb {
+	
+	private static int iStop = 1;
 
 	private static final String POOL_NAME = "proxool.tiebadb";
-	
-	
+
+	/**
+	 * 线程是否停止
+	 * @return
+	 */
+	public int getiStop() {
+		return iStop;
+	}
 	/**
 	 * 从数据库中获取Setting表
 	 * @return
@@ -201,8 +209,11 @@ public class XUSTbarDb {
 			String note_url = ParseMD5.parseStr2MD5(topicNote.getNote_url());
 			if (hasExistNoteUrl(note_url) || hasExistNoteUrl(topicNote.getNote_url())) {
 //				updateStateValue(note_url, 1);
+				++iStop;
+				//if (iStop >= 150)  Stop Thread!,return
 				updateTopicNoteCount(topicNote, isMD5);
 			}else {
+				iStop = 1;
 				insertTopicNoteCrawlInfo(topicNote,isMD5);
 			}
 		}
