@@ -1,10 +1,6 @@
 package netrobot.crawl.xustbar.thread;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import netrobot.crawl.xustbar.CrawlTopicNote;
 import netrobot.crawl.xustbar.db.XUSTbarDb;
 import netrobot.crawl.xustbar.model.Setting;
@@ -12,14 +8,14 @@ import netrobot.crawl.xustbar.model.Setting;
 public class TopicNoteThread extends ThreadPool{
 
 	//Ò³Ãæ±ê¼Ç
-	private static int pn;
+	private int pn;
 	
-	private static XUSTbarDb db;
+	private XUSTbarDb db;
 	
-	private static String bar_url;
-	private static String bar_name;
-	private static int crawl_frequency;
-	private static int bar_crawl_note_count;
+	private String bar_url;
+	private String bar_name;
+	private int crawl_frequency;
+	private int bar_crawl_note_count;
 
 	
 	public TopicNoteThread (){

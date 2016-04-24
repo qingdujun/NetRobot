@@ -35,7 +35,7 @@ public class CrawlSetting extends Crawl{
 	 * @return
 	 */
 	private String getTopicNoteCount(){
-		return RegexUtil.getString(getPageSourceCode(), TOPIC_NOTE, 1);
+		return RegexUtil.getFirstString(getPageSourceCode(), TOPIC_NOTE, 1);
 	}
 	/**
 	 * 获取实际爬取帖子数目
@@ -68,8 +68,10 @@ public class CrawlSetting extends Crawl{
 	public static void main(String[] args) {
 		
 		CrawlSetting cs = new CrawlSetting("http://tieba.baidu.com/f?kw=%E8%A5%BF%E5%AE%89%E7%A7%91%E6%8A%80%E5%A4%A7%E5%AD%A6","西安科技大学");
-		XUSTbarDb db = new XUSTbarDb();
-		db.saveSettingCrawlInfo(cs.getSetting(), false);
+//		XUSTbarDb db = new XUSTbarDb();
+//		db.saveSettingCrawlInfo(cs.getSetting(), false);
+		
+		System.out.println(cs.getTopicNoteCount());
 		
 	}
 

@@ -34,6 +34,8 @@ public class CrawlNoteDetail extends Crawl{
 	//一级回复时间
 	private static final String ONE_REPLY_TIME = "(\\d+-\\d+-\\d+ \\d+:\\d+)";
 	
+	private static final String REPLY_PAGE = "回复贴，共<span class=\"red\">(\\d+)</span>页";
+	
 	private static HashMap<String, String> params;
 
 	static{
@@ -48,6 +50,14 @@ public class CrawlNoteDetail extends Crawl{
 		this.note_url = note_url;
 	}
 	
+	public List<String> getReply_times() {
+		return reply_times;
+	}
+
+	public void setReply_times(List<String> reply_times) {
+		this.reply_times = reply_times;
+	}
+
 	/**
 	 * 获取一级回复楼本身ID
 	 * @return
@@ -68,6 +78,13 @@ public class CrawlNoteDetail extends Crawl{
 	 */
 	private List<String> getOneReplyTime(){
 		return RegexUtil.getList(getPageSourceCode(), ONE_REPLY_TIME, 1);
+	}
+	/**
+	 * 获取帖子回复页数
+	 * @return
+	 */
+	public String getReplyPage(){
+		return RegexUtil.getFirstString(getPageSourceCode(), REPLY_PAGE, 1);
 	}
 	/**
 	 * 获取一级回复内容，过滤
@@ -133,7 +150,7 @@ public class CrawlNoteDetail extends Crawl{
 	public static void main(String[] args) {
 
 		//XUST某一帖子url
-		CrawlNoteDetail cnd = new CrawlNoteDetail("http://tieba.baidu.com/p/4496267469");
+		CrawlNoteDetail cnd = new CrawlNoteDetail("http://tieba.baidu.com/p/4481777065");
 
 //		List<String> pid = noteDetail.getOneReplyTime();
 //		
@@ -141,7 +158,9 @@ public class CrawlNoteDetail extends Crawl{
 //			System.out.println(i + " "+pid.get(i));
 //		}
 		
-		XUSTbarDb db = new XUSTbarDb();
-		db.saveNoteDetailInfo(cnd.getNoteDetails(), false);
+		
+		System.out.println(cnd.getReplyPage());
+//		XUSTbarDb db = new XUSTbarDb();
+//		db.saveNoteDetailInfo(cnd.getNoteDetails(), false);
 	}
 }

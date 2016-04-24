@@ -139,17 +139,15 @@ public class CrawlTopicNote extends Crawl{
 		if (time.indexOf(":") > 0) {
 			//			yyyy-MM-dd HH:mm
 			//			eg.20:22
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-M-dd ");
+			SimpleDateFormat sdf = new SimpleDateFormat("-M-dd ");
 			Date date = new Date(curTime);  
-			String tm = sdf.format(date)+time;  
+			String tm = "0000"+sdf.format(date)+time;  
 			return tm;
 		}else if(time.indexOf("-") > 0) {
 			//			eg.4-20
-			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-");
-			SimpleDateFormat sdf2 = new SimpleDateFormat(" HH:mm");
-			Date date1 = new Date(curTime);  
-			Date date2 = new Date(curTime); 
-			String tm = sdf1.format(date1)+time+sdf2.format(date2);  
+			SimpleDateFormat sdf = new SimpleDateFormat(" HH:mm");
+			Date date = new Date(curTime); 
+			String tm = "0000-"+time+sdf.format(date);  
 			//			System.out.println(tm);
 			return tm;
 		}
@@ -234,8 +232,9 @@ public class CrawlTopicNote extends Crawl{
 //			System.out.println((i+1)+" "+cn.get(i)+" "+url.get(i)+" "+tl.get(i)+" "+tm.get(i));
 //		}
 		
-		XUSTbarDb db = new XUSTbarDb();
-		db.saveTopicNoteCrawlInfo(ctn.getTopicNotes(), false);
+//		XUSTbarDb db = new XUSTbarDb();
+//		db.saveTopicNoteCrawlInfo(ctn.getTopicNotes(), false);
 
+		System.out.println(ctn.getLastReplyTime(true));
 	}
 }

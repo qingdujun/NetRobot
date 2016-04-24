@@ -171,14 +171,15 @@ public class XUSTbarDb {
 	}
 	
 	/**
-	 * 从数据库中获取crawlTopicNote清单
+	 * 从数据库中获取crawlTopicNote清单,分页查询
 	 * @return
 	 */
-	public List<TopicNote> getTopicNoteCrawlList(){
+	public List<TopicNote> getTopicNoteCrawlList(int row, int count){
 		List<TopicNote> topicNotes = new ArrayList<TopicNote>();
 		DbServer dbServer = new DbServer(POOL_NAME);
 		try {
-			String sql = "select * from topicnote where `state` = '1'";
+			//SELECT * FROM `topicnote` LIMIT 1000, 1000
+			String sql = "SELECT * FROM `topicnote` WHERE `state` = '1' LIMIT "+row+" , "+count;
 			ResultSet rs = dbServer.select(sql);
 			while (rs.next()) {
 				TopicNote topicNote = new TopicNote();
@@ -195,6 +196,26 @@ public class XUSTbarDb {
 		}
 		return topicNotes;
 	}
+	
+	/**
+	 * 获取数据库中需爬取条数
+	 * @return
+	 */
+	public int getTopicNoteCount(){
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			String sql = "SELECT COUNT(*) FROM `topicnote` WHERE `state` = '1'";
+			ResultSet rs = dbServer.select(sql);
+			while(rs.next()){
+				return rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+		return 0;
+	}
 	/**
 	 * 
 	 * @param topicNotes
@@ -208,9 +229,8 @@ public class XUSTbarDb {
 			//MD5加密
 			String note_url = ParseMD5.parseStr2MD5(topicNote.getNote_url());
 			if (hasExistNoteUrl(note_url) || hasExistNoteUrl(topicNote.getNote_url())) {
-//				updateStateValue(note_url, 1);
 				++iStop;
-				//if (iStop >= 150)  Stop Thread!,return
+				updateStateValue(note_url, 1);
 				updateTopicNoteCount(topicNote, isMD5);
 			}else {
 				iStop = 1;
@@ -299,13 +319,17 @@ public class XUSTbarDb {
 			dbServer.close();
 		}
 	}
+	private String linkNoteTime(TopicNote topicNote, String noteDetailTime){
+		return noteDetailTime.substring(0, 4)+topicNote.getLast_reply_time().substring(4);
+	}
 	/**
-	 * 更新主题帖子时间
+	 * 更新主题帖子时间(使用帖子详细内容)
 	 * @param topicNote
 	 * @param isMD5
 	 */
-	private void updateTopicNoteTime(TopicNote topicNote, boolean isMD5){
-		if (null == topicNote) {
+	public void updateTopicNoteTime(TopicNote topicNote,  String noteDetailTime,boolean isMD5){
+
+		if (null == topicNote || null == noteDetailTime) {
 			return;
 		}
 		DbServer dbServer = new DbServer(POOL_NAME);
@@ -314,10 +338,10 @@ public class XUSTbarDb {
 			int i = 1;
 			if (isMD5) {
 				//MD5加密
-				params.put(i++, topicNote.getLast_reply_time());
+				params.put(i++, ParseMD5.parseStr2MD5(linkNoteTime(topicNote,noteDetailTime)));
 				params.put(i++, 0);
 			}else {
-				params.put(i++, topicNote.getLast_reply_time());
+				params.put(i++, linkNoteTime(topicNote,noteDetailTime));
 				params.put(i++, 0);
 			}
 			String columns = "reply_time,state";
@@ -417,7 +441,7 @@ public class XUSTbarDb {
 		
 		
 		XUSTbarDb db = new XUSTbarDb();
-		System.out.println(JsonUtil.parseJson(db.getTopicNoteCrawlList()));
+//		System.out.println(JsonUtil.parseJson(db.getTopicNoteCrawlList()));
 
 	}
 }
