@@ -3,14 +3,8 @@ package netrobot.crawl.xustbar;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
 import netrobot.crawl.Crawl;
-import netrobot.crawl.xustbar.db.XUSTbarDb;
 import netrobot.crawl.xustbar.model.NoteDetail;
-import netrobot.crawl.xustbar.model.TopicNote;
-import netrobot.utils.JsonUtil;
 import netrobot.utils.RegexUtil;
 
 public class CrawlNoteDetail extends Crawl{	
@@ -19,7 +13,7 @@ public class CrawlNoteDetail extends Crawl{
 	//回复楼id
 	private List<String> reply_floor_ids;  //不允许重复
 	//父id(令，一级回复id=0)
-	private List<String> reply_parent_ids;  //非空
+//	private List<String> reply_parent_ids;  //非空
 	//一级回复(或楼中楼)内容
 	private List<String> reply_contexts;
 	//一级回复(或楼中楼)回复数
@@ -135,23 +129,35 @@ public class CrawlNoteDetail extends Crawl{
 		int minSize = getNoteDetailMinSize();
 		for (int i = 0; i < minSize; i++) {
 			NoteDetail noteDetail = new NoteDetail();
-			
-			noteDetail.setNote_url(note_url);
+
+			noteDetail.setNote_url(getNoteUrl(note_url));
 			noteDetail.setReply_floor_id(reply_floor_ids.get(i));
 			noteDetail.setReply_context(reply_contexts.get(i));
 			noteDetail.setReply_parent_id("0");
 			noteDetail.setReply_time(reply_times.get(i));
 			noteDetails.add(noteDetail);
 		}
-
+		System.out.println("crawling url "+note_url);
+		
 		return noteDetails;
 	}
-	
+	/**
+	 * 还原帖子url
+	 * @param url
+	 * @return
+	 */
+	private String getNoteUrl(String url) {
+
+		return url.substring(0, (url.indexOf("?") > 0 ? url.indexOf("?"): url.length()));
+	}
 	public static void main(String[] args) {
 
 		//XUST某一帖子url
-		CrawlNoteDetail cnd = new CrawlNoteDetail("http://tieba.baidu.com/p/4481777065");
+		CrawlNoteDetail cnd = new CrawlNoteDetail("http://tieba.baidu.com/p/4504458989");
 
+//		http://tieba.baidu.com/p/4504458989
+		
+		System.out.println(cnd.getReply_times()==null);
 //		List<String> pid = noteDetail.getOneReplyTime();
 //		
 //		for (int i = 0; i < pid.size(); i++) {
@@ -159,7 +165,7 @@ public class CrawlNoteDetail extends Crawl{
 //		}
 		
 		
-		System.out.println(cnd.getReplyPage());
+//		System.out.println(cnd.getReplyPage());
 //		XUSTbarDb db = new XUSTbarDb();
 //		db.saveNoteDetailInfo(cnd.getNoteDetails(), false);
 	}

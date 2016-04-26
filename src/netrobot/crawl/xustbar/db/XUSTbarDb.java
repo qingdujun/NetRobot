@@ -1,6 +1,5 @@
 package netrobot.crawl.xustbar.db;
 
-import java.net.URL;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +9,6 @@ import netrobot.crawl.xustbar.model.NoteDetail;
 import netrobot.crawl.xustbar.model.Setting;
 import netrobot.crawl.xustbar.model.TopicNote;
 import netrobot.db.manager.DbServer;
-import netrobot.utils.JsonUtil;
 import netrobot.utils.ParseMD5;
 /**
  * 数据库操作(import:proxool.cglib.jar)
@@ -30,6 +28,27 @@ public class XUSTbarDb {
 	public int getiStop() {
 		return iStop;
 	}
+	
+	/**
+	 * 从数据库中获取置顶帖数目
+	 * @return
+	 */
+	public int getTopNoteCount(){
+		DbServer dbServer = new DbServer(POOL_NAME);
+		try {
+			String sql = "select count(*) from topicnote where `last_reply_time` = '0'";
+			ResultSet rs = dbServer.select(sql);
+			while (rs.next()) {
+				return rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			dbServer.close();
+		}
+		return 0;
+	}
+	
 	/**
 	 * 从数据库中获取Setting表
 	 * @return
@@ -91,14 +110,14 @@ public class XUSTbarDb {
 				params.put(i++, setting.getBar_crawl_note_count());
 				params.put(i++, setting.getCrawl_frequency());
 				params.put(i++, setting.getLast_crawl_time());
-				params.put(i, 1);
+				params.put(i, "1");
 			}else {
 				params.put(i++, setting.getBar_url());
 				params.put(i++, setting.getBar_name());
 				params.put(i++, setting.getBar_crawl_note_count());
 				params.put(i++, setting.getCrawl_frequency());
 				params.put(i++, setting.getLast_crawl_time());
-				params.put(i, 1);
+				params.put(i, "1");
 			}
 			
 			dbServer.insert("setting","bar_url,bar_name,bar_crawl_note_count,crawl_frequency,last_crawl_time,state",params);
@@ -129,13 +148,13 @@ public class XUSTbarDb {
 				params.put(i++, setting.getBar_crawl_note_count());
 				params.put(i++, setting.getCrawl_frequency());
 				params.put(i++, setting.getLast_crawl_time());
-				params.put(i, 1);
+				params.put(i, "1");
 			}else {
 				params.put(i++, setting.getBar_name());
 				params.put(i++, setting.getBar_crawl_note_count());
 				params.put(i++, setting.getCrawl_frequency());
 				params.put(i++, setting.getLast_crawl_time());
-				params.put(i, 1);
+				params.put(i, "1");
 			}
 			String columns = "bar_name,bar_crawl_note_count,crawl_frequency,last_crawl_time,state";
 			String condition = "where bar_url = '"+setting.getBar_url()+"'";
@@ -230,6 +249,7 @@ public class XUSTbarDb {
 			String note_url = ParseMD5.parseStr2MD5(topicNote.getNote_url());
 			if (hasExistNoteUrl(note_url) || hasExistNoteUrl(topicNote.getNote_url())) {
 				++iStop;
+				updateStateValue(topicNote.getNote_url(), 1);
 				updateStateValue(note_url, 1);
 				updateTopicNoteCount(topicNote, isMD5);
 			}else {
@@ -238,25 +258,17 @@ public class XUSTbarDb {
 			}
 		}
 	}
-	public void method() {
-		DbServer dbServer = new DbServer(POOL_NAME);
-		try {
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}finally {
-			dbServer.close();
-		}
-	}
+
 	/**
 	 * 更新state值
 	 * @param note_url
 	 * @param state
 	 */
-	private void updateStateValue(String note_url, int state) {
+	public void updateStateValue(String note_url, int state) {
 		DbServer dbServer = new DbServer(POOL_NAME);
 		try {
 			String sql = "update topicnote set `state` = '"+state+"' where note_url = '"+note_url+"'";
+//			System.out.println(sql);
 			dbServer.update(sql);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -303,13 +315,13 @@ public class XUSTbarDb {
 				params.put(i++, topicNote.getTopic_reply_count());
 				params.put(i++, ParseMD5.parseStr2MD5(topicNote.getNote_title()));
 				params.put(i++, ParseMD5.parseStr2MD5(topicNote.getLast_reply_time()));
-				params.put(i, 1);
+				params.put(i, "1");
 			}else {
 				params.put(i++, topicNote.getNote_url());
 				params.put(i++, topicNote.getTopic_reply_count());
 				params.put(i++, topicNote.getNote_title());
 				params.put(i++, topicNote.getLast_reply_time());
-				params.put(i, 1);
+				params.put(i, "1");
 			}
 			
 			dbServer.insert("topicnote","note_url,topic_reply_count,note_title,last_reply_time,state",params);
@@ -339,12 +351,12 @@ public class XUSTbarDb {
 			if (isMD5) {
 				//MD5加密
 				params.put(i++, ParseMD5.parseStr2MD5(linkNoteTime(topicNote,noteDetailTime)));
-				params.put(i++, 0);
+				params.put(i++, "0");
 			}else {
 				params.put(i++, linkNoteTime(topicNote,noteDetailTime));
-				params.put(i++, 0);
+				params.put(i++, "0");
 			}
-			String columns = "reply_time,state";
+			String columns = "last_reply_time,state";
 			String condition = "where note_url = '"+topicNote.getNote_url()+"'";
 			dbServer.update("topicnote", columns, condition, params);
 		} catch (Exception e) {
@@ -396,7 +408,6 @@ public class XUSTbarDb {
 			//MD5加密
 			String reply_floor_id = ParseMD5.parseStr2MD5(noteDetail.getReply_floor_id());
 			if (hasExistNoteUrl(reply_floor_id) || hasExistNoteUrl(noteDetail.getReply_floor_id())) {
-//				updateStateValue(note_url, 1);
 				continue;
 			}else {
 				insertNoteDetailInfo(noteDetail,isMD5);
@@ -420,13 +431,13 @@ public class XUSTbarDb {
 				params.put(i++, ParseMD5.parseStr2MD5(noteDetail.getReply_floor_id()));
 				params.put(i++, ParseMD5.parseStr2MD5("0"));
 				params.put(i++, ParseMD5.parseStr2MD5(noteDetail.getReply_context()));
-				params.put(i, 1);
+				params.put(i, "1");
 			}else {
 				params.put(i++, noteDetail.getNote_url());
 				params.put(i++, noteDetail.getReply_floor_id());
 				params.put(i++, "0");
 				params.put(i++, noteDetail.getReply_context());
-				params.put(i, 1);
+				params.put(i, "1");
 			}
 			
 			dbServer.insert("notedetail","note_url,reply_floor_id,reply_parent_id,reply_context,state",params);
@@ -441,6 +452,8 @@ public class XUSTbarDb {
 		
 		
 		XUSTbarDb db = new XUSTbarDb();
+		
+		System.out.println(db.getTopNoteCount());
 //		System.out.println(JsonUtil.parseJson(db.getTopicNoteCrawlList()));
 
 	}

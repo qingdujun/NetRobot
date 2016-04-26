@@ -4,31 +4,31 @@ import java.util.List;
 
 import netrobot.crawl.xustbar.CrawlNoteDetail;
 import netrobot.crawl.xustbar.db.XUSTbarDb;
-import netrobot.crawl.xustbar.model.NoteDetail;
 import netrobot.crawl.xustbar.model.TopicNote;
-import netrobot.utils.JsonUtil;
 
-public class NoteDetailThread extends ThreadPool{
+public class NoteDetailThread implements Runnable{
 
-	private XUSTbarDb db;
+	private static XUSTbarDb db;
 	
 	//需爬取url总数
 	private int state_count;
 	
 	//每次从数据库中取的数量
 	private final int count = 1000;
-	
-	public NoteDetailThread() {
-		init();
-	}
+
+	//线程池
+//	private static ExecutorService newFixedThreadPool;
+	private static boolean flag = false;
+	private static int row = 0;
+
 	/**
 	 * 参数初始化
 	 */
-	private void init() {
+	private static void init() {
 		db = new XUSTbarDb();
 		//开启
-		setFlag(true);
-		state_count = db.getTopicNoteCount();
+		flag = true;
+		
 	}
 	
 	/**
@@ -53,55 +53,109 @@ public class NoteDetailThread extends ThreadPool{
 		return topicNotes.get(i);
 	}
 	/**
+	 * 抓取完成
+	 * @return
+	 */
+	private boolean isCrawlFinish(){
+		if (state_count <= db.getTopNoteCount()) {
+			try {
+				Thread.sleep(2000);
+				state_count = db.getTopicNoteCount();
+				if (state_count <= db.getTopNoteCount()) {
+					//停止线程
+					flag = false;
+					System.out.println("NoteDetailThread will stop.");
+					return true;
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
+	/**
 	 * 爬取方法
 	 */
-	private synchronized void crawlAllNoteDetail(){
+	private void crawlAllNoteDetail(){
 		int realCount = 0;
-		for (int i = 0; i < state_count; i+=realCount) {
+		//获取主题帖list.size()
+		state_count = db.getTopicNoteCount();
+		System.out.println("now,we need update note count = "+state_count);
+		if (isCrawlFinish()) {
+			return;
+		}
+		//批处理
+		for( ; row < state_count; ) {
 			//数据库分页查询
-			List<TopicNote> topicNotes = getTopicNotes(i, count);
+			List<TopicNote> topicNotes = getTopicNotes(row, count);
 			//实际提取数量
 			realCount = topicNotes.size();
-			System.out.println("state_count = "+state_count);
+			row += realCount;
+			System.out.println("we real get note count total "+realCount+" from row "+row+" begin.");
 			for (int j = 0; j < topicNotes.size(); j++) {
 				//网络爬虫，入库
 				TopicNote topicNote = getTopicNote(topicNotes, j);
 				CrawlNoteDetail cnd = new CrawlNoteDetail(topicNote.getNote_url());
-				//主题帖被回复数目
-				int reply_count = Integer.parseInt(cnd.getReplyPage());
-				//帖子挖取深度不超过1000页
-				if (reply_count > 1000) {
-					reply_count = 1000;
+				//主题帖被回复页数(网络访问)
+				String tmp = cnd.getReplyPage();
+				//帖子被删除，无法更新
+				if (null == tmp || tmp.equals("")) {
+					db.updateStateValue(topicNote.getNote_url(), 0);
+					System.out.println("404   "+ topicNote.getNote_url());
+					continue;
 				}
-				System.out.println("reply_count = "+reply_count);
-				for (int k = 1; k <= reply_count; k++) {
+				int reply_page = Integer.parseInt(tmp);
+				//帖子挖取深度不超过1000页
+				if (reply_page > 1000) {
+					reply_page = 1000;
+				}
+				for (int k = 1; k <= reply_page; k++) {
 					cnd = new CrawlNoteDetail(topicNote.getNote_url()+"?pn="+k);
-//					System.out.println("url = "+topicNote.getNote_url()+"?pn="+k);
-//					System.out.println(JsonUtil.parseJson(cnd.getNoteDetails()));
+					//数据库存储操作（网络访问）
 					db.saveNoteDetailInfo(cnd.getNoteDetails(), false);
+					try {
+						//产生随机数,沉睡时间
+						Thread.sleep((long)(50+Math.random()*180));
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				//帖子被删除，无法更新
+				if (null == cnd.getReply_times()) {
+					continue;
 				}
 				//进行TopicNote库数据更新操作（reply_time,state）
 				int size = cnd.getReply_times().size();
-				db.updateTopicNoteTime(topicNote, cnd.getReply_times().get(size-1), false);
+				//置顶帖不更新
+				if (0 != size && !topicNote.getLast_reply_time().equals("0")) {
+					db.updateTopicNoteTime(topicNote, cnd.getReply_times().get(size-1), false);
+				}
 			}
 		}
 
 	}
 	
 
-	@Override
-	protected void executeMethod() {
-		crawlAllNoteDetail();
+//	public static void openNoteDetailThread(int N) {
+//		init();
+//		//引入线程池
+//		newFixedThreadPool = Executors.newFixedThreadPool(N);  
+//		for (int i = 0; i < N; i++) {  
+//			newFixedThreadPool.execute(new NoteDetailThread());
+//		}  
+//		newFixedThreadPool.shutdown();
+//	}
+	public static void openNoteDetailThread() {
+		init();
+		NoteDetailThread tnt = new NoteDetailThread();
+		Thread t1 = new Thread(tnt);
+		t1.start();
 	}
-
-	public static void main(String[] args) {
-		NoteDetailThread ndt = new NoteDetailThread();
-		
-		ndt.crawlAllNoteDetail();
-//		XUSTbarDb db = new XUSTbarDb();
-//		int count = db.getTopicNoteCount();
-//		System.out.println(count);
-//		ndt.getTopicNotes(10,40);
-//		ndt.openNThreadCrawl(4);
+	@Override
+	public void run() {
+		while (flag) {
+			crawlAllNoteDetail();
+		}
 	}
 }

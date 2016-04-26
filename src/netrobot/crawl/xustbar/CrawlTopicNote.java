@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import netrobot.crawl.Crawl;
-import netrobot.crawl.xustbar.db.XUSTbarDb;
 import netrobot.crawl.xustbar.model.TopicNote;
 import netrobot.utils.RegexUtil;
 
@@ -29,13 +28,12 @@ public class CrawlTopicNote extends Crawl{
 	//置顶帖子数
 	private static final String TOP_NOTE_COUNT = "(alt=\"置顶\")";
 	private static final String  LAST_REPLY_TIME = "title=\"最后回复时间\">            (.*?)</span>";
-	//主题帖页数
-	private static final String TOTAL_PAGE = "回复贴，共<span class=\"red\">(\\d+)</span>页</li>";
-	
+
 	private List<String> note_urls;
 	private List<String> topic_reply_counts;
 	private List<String> note_titles;
 	private List<String> last_reply_times;
+	private static int top_note = 0;
 	
 	static{
 		params = new HashMap<String,String>();
@@ -83,7 +81,7 @@ public class CrawlTopicNote extends Crawl{
 		//构造缺省时间
 		List<String> tmpReplyTime = RegexUtil.getList(getPageSourceCode(), LAST_REPLY_TIME, 1);
 		for (int i = 0; i < getTopNoteCount(); i++) {
-			tmpReplyTime.add(0, "0");
+			tmpReplyTime.add(i, "0");
 		}
 		return tmpReplyTime;
 	}
@@ -92,7 +90,7 @@ public class CrawlTopicNote extends Crawl{
 	 * @return
 	 */
 	private int getTopNoteCount() {
-		return RegexUtil.getList(getPageSourceCode(), TOP_NOTE_COUNT, 1).size();
+		return top_note = RegexUtil.getList(getPageSourceCode(), TOP_NOTE_COUNT, 1).size();
 	}
 	/**
 	 * 过滤标题中emoji表情
@@ -161,11 +159,12 @@ public class CrawlTopicNote extends Crawl{
 	private List<String> getLastReplyTime(boolean isLink) {
 		List<String> lastReplyTimes = getLastReplyTime();
 
+//		System.out.println("lastReplyTimes.size() = "+lastReplyTimes.size());
 		if (isLink) {
 			List<String> linkTimes = new ArrayList<String>();
-			for (String linkTime : lastReplyTimes) {
-				linkTime = getLinkTime(linkTime);
-				linkTimes.add(linkTime);
+			for (int i = 0; i < lastReplyTimes.size(); i++) {
+				//置顶帖等拼接
+				linkTimes.add(i >= top_note? getLinkTime(lastReplyTimes.get(i)) : lastReplyTimes.get(i));
 			}
 			return linkTimes;
 		}

@@ -32,9 +32,9 @@ public abstract class Crawl {
 	private String pageSourceCode = "";
 	//头信息
 	private Header[] responseHeaders = null;
-	private static int connectTimeOut = 1000;
-	private static int readTimeOut = 1000;
-	private static int maxConnectTimes = 3;
+	private static int connectTimeOut = 5000;
+	private static int readTimeOut = 5000;
+	private static int maxConnectTimes = 5;
 	private static String charsetName = "ISO-8859-1";
 
 	private static MultiThreadedHttpConnectionManager httpConnectionManager = new MultiThreadedHttpConnectionManager();
@@ -108,11 +108,15 @@ public abstract class Crawl {
 	private boolean readPage(HttpMethod method,String defaultCharset,String url) {
 		int n = maxConnectTimes;
 		while (n > 0) {
+//			System.out.println("while n = "+n);
 			try {
+//				System.out.println("try n = "+n);
 				if (HttpStatus.SC_OK != httpClient.executeMethod(method)) {
+					System.out.println("if n = "+n);
 					logger.info(" can't connect "+url+(maxConnectTimes-n+1)+" times ");
 					--n;
 				}else {
+//					System.out.println("else n = "+n);
 					responseHeaders = method.getRequestHeaders();
 					InputStream inputStream = method.getResponseBodyAsStream();
 					//此处需指定charsetName，否则会编码错误
@@ -123,12 +127,12 @@ public abstract class Crawl {
 						stringBuffer.append(lineInfo);
 						stringBuffer.append("\n");
 					}
-					System.out.println("defaultCharset:"+defaultCharset);
+//					System.out.println("defaultCharset:"+defaultCharset);
 					pageSourceCode = new String(stringBuffer.toString().getBytes(charsetName),defaultCharset);
-//					System.out.println(pageSourceCode);
 					return true;
 				}
 			} catch (Exception e) {
+//				System.out.println("catch n = "+n);
 				logger.error(url+" can't connect "+(maxConnectTimes-n+1)+" times ");
 				--n;
 			}

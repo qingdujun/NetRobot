@@ -13,8 +13,7 @@ public class CrawlSetting extends Crawl{
 	private String bar_name;
 	private int crawl_frequency;
 	
-	
-	private static final String TOPIC_NOTE = "共有主题数<span class=\"red\">(\\d+)</span>个";
+	private static final String TOPIC_NOTE = "共有主题数<span class=\"red_text\">(\\d+)</span>个";
 	
 	static{
 		params = new HashMap<String,String>();
@@ -27,7 +26,7 @@ public class CrawlSetting extends Crawl{
 		readPageByGet(bar_url, params, "UTF-8");
 		this.bar_url = bar_url;
 		this.bar_name = bar_name;
-		this.crawl_frequency = 180;
+		this.crawl_frequency = 60;
 	}
 
 	/**
@@ -43,6 +42,10 @@ public class CrawlSetting extends Crawl{
 	 */
 	private String getCrawlNoteCount(){
 		String count = getTopicNoteCount();
+//		System.out.println("count = "+count);
+		if (null == count || count.equals("")) {
+			return "0";
+		}
 		int iCount = Integer.parseInt(count);
 		if (iCount > 2000050) {
 			return "2000000";
@@ -54,7 +57,7 @@ public class CrawlSetting extends Crawl{
 	 * 组装Setting数据
 	 * @return
 	 */
-	public Setting getSetting(){
+	private Setting getSetting(){
 		Setting setting = new Setting();
 		setting.setBar_url(bar_url);
 		setting.setBar_name(bar_name);
@@ -65,14 +68,19 @@ public class CrawlSetting extends Crawl{
 	} 
 	
 	
-	public static void main(String[] args) {
+	public static void openCrawlSetting() {
 		
 		CrawlSetting cs = new CrawlSetting("http://tieba.baidu.com/f?kw=%E8%A5%BF%E5%AE%89%E7%A7%91%E6%8A%80%E5%A4%A7%E5%AD%A6","西安科技大学");
-//		XUSTbarDb db = new XUSTbarDb();
-//		db.saveSettingCrawlInfo(cs.getSetting(), false);
+		XUSTbarDb db = new XUSTbarDb();
+		db.saveSettingCrawlInfo(cs.getSetting(), false);
 		
-		System.out.println(cs.getTopicNoteCount());
+		System.out.println("Bar Setting Information acquisition is completed.");
 		
+	}
+	public static void main(String[] args) {
+//		CrawlSetting cs = new CrawlSetting("http://tieba.baidu.com/f?kw=%E8%A5%BF%E5%AE%89%E7%A7%91%E6%8A%80%E5%A4%A7%E5%AD%A6","西安科技大学");
+		openCrawlSetting();
+//		System.out.println(cs.getCrawlNoteCount());
 	}
 
 }
