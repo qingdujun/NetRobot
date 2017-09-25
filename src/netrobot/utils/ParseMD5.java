@@ -2,7 +2,7 @@ package netrobot.utils;
 
 /**
  * MD5º”√‹
- * @author qingdjun
+ * @author qingdujun
  *
  */
 public class ParseMD5 extends Encrypt{
